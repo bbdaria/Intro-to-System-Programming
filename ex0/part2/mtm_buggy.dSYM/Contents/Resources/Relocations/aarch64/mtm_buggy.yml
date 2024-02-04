@@ -1,0 +1,15 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/dariabebin/Desktop/ex0/part2/mtm_buggy'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _swap, symObjAddr: 0x0, symBinAddr: 0x1000038EC, symSize: 0x3C }
+  - { offsetInCU: 0x41, offset: 0x41, size: 0x8, addend: 0x0, symName: _swap, symObjAddr: 0x0, symBinAddr: 0x1000038EC, symSize: 0x3C }
+  - { offsetInCU: 0x81, offset: 0x81, size: 0x8, addend: 0x0, symName: _getLongestString, symObjAddr: 0x3C, symBinAddr: 0x100003928, symSize: 0xD0 }
+  - { offsetInCU: 0xE1, offset: 0xE1, size: 0x8, addend: 0x0, symName: _sortStrings, symObjAddr: 0x10C, symBinAddr: 0x1000039F8, symSize: 0xD4 }
+  - { offsetInCU: 0x13D, offset: 0x13D, size: 0x8, addend: 0x0, symName: _readSize, symObjAddr: 0x1E0, symBinAddr: 0x100003ACC, symSize: 0x4C }
+  - { offsetInCU: 0x165, offset: 0x165, size: 0x8, addend: 0x0, symName: _printResults, symObjAddr: 0x22C, symBinAddr: 0x100003B18, symSize: 0x94 }
+  - { offsetInCU: 0x1A5, offset: 0x1A5, size: 0x8, addend: 0x0, symName: _readWord, symObjAddr: 0x2C0, symBinAddr: 0x100003BAC, symSize: 0xF4 }
+  - { offsetInCU: 0x1DB, offset: 0x1DB, size: 0x8, addend: 0x0, symName: _readWords, symObjAddr: 0x3B4, symBinAddr: 0x100003CA0, symSize: 0xCC }
+  - { offsetInCU: 0x22D, offset: 0x22D, size: 0x8, addend: 0x0, symName: _freeWords, symObjAddr: 0x480, symBinAddr: 0x100003D6C, symSize: 0x6C }
+  - { offsetInCU: 0x27B, offset: 0x27B, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x4EC, symBinAddr: 0x100003DD8, symSize: 0xA0 }
+...
