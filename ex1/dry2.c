@@ -13,11 +13,8 @@ typedef struct node_t
 // functions for ex1
 bool isListSorted(Node list);
 Node mergeSortedLists(Node list1, Node list2);
-int getLenList(Node list);
-Node allocateNewList(int size);
-void freeList(Node list);
 
-// functions for testing and building
+// NOTE THESE FUNCTION ARE FOR TESTING ONLY.
 Node createNode(int value);
 void printList(Node list);
 
@@ -40,63 +37,8 @@ bool isListSorted(Node list)
     return true;
 }
 
-int getLenList(Node list)
-{
-    // returns length of list
-    int count = 0;
-    while (list)
-    {
-        count++;
-        list = list->next;
-    }
-    return count;
-}
-void freeList(Node list)
-{
-    if (!list)
-    {
-        return;
-    }
-    while (list->next != NULL)
-    {
-        Node temp = list->next;
-        free(list);
-        list = temp;
-    }
-    free(list);
-}
-
-Node allocateNewList(int size)
-{
-    if (size == 0)
-    {
-        // not possible because we already returned null when one of the lists are null
-        return NULL;
-    }
-    Node root = malloc(sizeof(Node));
-    if (!root)
-    {
-        // first allocation failed
-        return NULL;
-    }
-    Node curr = root;
-    for (int i = 1; i < size; i++)
-    {
-        Node temp = malloc(sizeof(Node));
-        if (!temp)
-        {
-            // i allocation failed, need to free the whole list
-            freeList(root);
-            return NULL;
-        }
-        curr->next = temp;
-        curr = curr->next;
-    }
-    return root;
-}
 Node mergeSortedLists(Node list1, Node list2)
 {
-
     if (!list1 || !list2)
     {
         return NULL;
@@ -105,46 +47,44 @@ Node mergeSortedLists(Node list1, Node list2)
     {
         return NULL;
     }
-    int len1 = getLenList(list1);             // length of list1
-    int len2 = getLenList(list2);             // length of list2
-    Node root = allocateNewList(len1 + len2); // returns the first node of the new list
-    if (!root)
+    Node root = NULL; // so we wont lose the list
+    if (list1->val < list2->val)
     {
-        return NULL;
+        root = list1;
+        list1 = list1->next;
+        root->next = NULL;
     }
-    Node curr = root; // so we dont lose the root
-    for (int i = 0; i < len1 + len2; i++)
+    else
     {
-        if (!list1 && list2)
+        root = list2;
+        list2 = list2->next;
+        root->next = NULL;
+    }
+
+    Node curr = root; // iterator node
+
+    while (list1 && list2)
+    {
+        if (list1->val < list2->val)
         {
-            curr->val = list2->val;
-            curr = curr->next;
-            list2 = list2->next;
+            curr->next = list1;
+            list1 = list1->next;
         }
         else
         {
-            if (!list2 && list1)
-            {
-                curr->val = list1->val;
-                curr = curr->next;
-                list1 = list1->next;
-            }
-            else
-            {
-                if (list1->val > list2->val)
-                {
-                    curr->val = list2->val;
-                    curr = curr->next;
-                    list2 = list2->next;
-                }
-                else
-                {
-                    curr->val = list1->val;
-                    curr = curr->next;
-                    list1 = list1->next;
-                }
-            }
+            curr->next = list2;
+            list2 = list2->next;
         }
+        curr = curr->next;
+    }
+    // lists might not be same length, so the longest will be added in the end
+    if (list1)
+    {
+        curr->next = list1;
+    }
+    if (list2)
+    {
+        curr->next = list2;
     }
     return root;
 }
@@ -196,11 +136,6 @@ int main(void)
 
     Node newList = mergeSortedLists(list1, list2);
     printList(newList);
-
-    // Freeing the allocated memory for the lists
-    freeList(list1);
-    freeList(list2);
-    freeList(newList);
 
     return 0;
 }

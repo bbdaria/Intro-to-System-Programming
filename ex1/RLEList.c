@@ -14,13 +14,14 @@ static int getNumberOfDigits(int val);  // returns number of digits in val
 // implement the functions here
 RLEList RLEListCreate(void)
 {
-    RLEList head = (RLEList)malloc(sizeof(RLEList));
+    RLEList head = (RLEList)malloc(sizeof(struct RLEList_t));
     if (!head)
     {
         return NULL;
     }
     head->next = NULL;
     head->times = 0;
+    head->character = '\0';
     return head;
 }
 
@@ -59,7 +60,7 @@ RLEListResult RLEListAppend(RLEList list, char value)
     }
     else
     {
-        RLEList newNode = (RLEList)malloc(sizeof(RLEList));
+        RLEList newNode = (RLEList)malloc(sizeof(struct RLEList_t)); // allocating new node to add to list
         if (!newNode)
         {
             return RLE_LIST_OUT_OF_MEMORY;
@@ -90,7 +91,6 @@ int RLEListSize(RLEList list)
 }
 
 RLEListResult RLEListRemove(RLEList list, int index)
-// did you understand the function bubi?
 {
     if (!list)
     {
@@ -116,8 +116,15 @@ RLEListResult RLEListRemove(RLEList list, int index)
             {
                 if (node == list)
                 {
-                    list = list->next;
-                    free(prevToNode);
+                    if (afterNode == NULL)
+                    {
+                        return RLE_LIST_SUCCESS;
+                    }
+                    list->character = afterNode->character;
+                    list->times = afterNode->times;
+                    list = afterNode->next;
+                    free(afterNode);
+
                     return RLE_LIST_SUCCESS;
                 }
 
@@ -158,24 +165,24 @@ char RLEListGet(RLEList list, int index, RLEListResult *result)
         *result = RLE_LIST_INDEX_OUT_OF_BOUNDS;
         return 0;
     }
-    RLEList node; // iterator for the list
-    for (node = list; node != NULL; node = node->next)
+    RLEList node = list; // iterator for the list
+    for (int i = 0; i < numberOfCharacters;)
     {
-        if (numberOfCharacters == 0)
+        i += node->times;
+        if (index < i)
         {
             if (!result)
             {
+
                 return node->character;
             }
-
-            *result = RLE_LIST_SUCCESS;
-            return node->character;
+            else
+            {
+                *result = RLE_LIST_SUCCESS;
+                return node->character;
+            }
         }
-        numberOfCharacters -= node->times;
-        if (numberOfCharacters == 0)
-        {
-            break; // we should'nt exit the for without finding a char, so this is just reprocussion
-        }
+        node = node->next;
     }
     if (!result)
     {
@@ -229,7 +236,20 @@ char *RLEListExportToString(RLEList list, RLEListResult *result)
         len++;
         temp1 = temp1->next;
     }
+    if (len == 0)
+    {
+        char *str = (char *)malloc(sizeof(char) * 1);
+        if (!str)
+        {
+            *result = RLE_LIST_OUT_OF_MEMORY;
+            return NULL;
+        }
+        *result = RLE_LIST_SUCCESS;
+        str[1] = '\0';
+        return str;
+    }
     int *numberOfDigits = (int *)malloc(sizeof(int) * len); // an array of the number of digits that the i-th node has
+
     if (!numberOfDigits)
     {
         *result = RLE_LIST_OUT_OF_MEMORY;
@@ -243,7 +263,7 @@ char *RLEListExportToString(RLEList list, RLEListResult *result)
         sum += numberOfDigits[i];                            // the sum of the total amout of charactors. will be the length of the string
         temp1 = temp1->next;
     }
-    char *str = (char *)malloc(sizeof(char) * sum + 1); // leaving room for \0
+    char *str = (char *)malloc(sizeof(char) * sum + 2); // leaving room for \0
     if (!str)
     {
         *result = RLE_LIST_OUT_OF_MEMORY;
@@ -276,7 +296,7 @@ char *RLEListExportToString(RLEList list, RLEListResult *result)
 
 RLEListResult RLEListMap(RLEList list, MapFunction map_function)
 {
-    if (!list)
+    if (!list || !map_function)
     {
         return RLE_LIST_NULL_ARGUMENT;
     }
@@ -285,6 +305,32 @@ RLEListResult RLEListMap(RLEList list, MapFunction map_function)
     {
         iterator->character = map_function(iterator->character);
         iterator = iterator->next;
+    }
+
+    // now we will check if we can minimize the list
+
+    iterator = list;
+    RLEList nextToIterator = iterator->next;
+    while (nextToIterator)
+    {
+        if (iterator->character == nextToIterator->character)
+        {
+            // we will join them
+            int count = 0;
+            RLEList temp = nextToIterator;
+            RLEList beforeTemp = iterator;
+            char val = iterator->character;
+            while (temp && temp->character == val)
+            {
+                count += temp->times;
+                beforeTemp->next = temp->next;
+                free(temp);
+                temp = beforeTemp->next;
+            }
+            iterator->times += count;
+        }
+        iterator = nextToIterator;
+        nextToIterator = nextToIterator->next;
     }
     return RLE_LIST_SUCCESS;
 }
