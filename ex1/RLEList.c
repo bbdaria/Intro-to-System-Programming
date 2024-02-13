@@ -10,9 +10,9 @@ struct RLEList_t
 
 static int getPowerOfTen(int exponant); // returns pow(10, exponant)
 static int getNumberOfDigits(int val);  // returns number of digits in val
+static int getListLength(RLEList list); // return the length of a list
 
-// implement the functions here
-RLEList RLEListCreate(void)
+RLEList RLEListCreate()
 {
     RLEList head = (RLEList)malloc(sizeof(struct RLEList_t));
     if (!head)
@@ -61,6 +61,7 @@ RLEListResult RLEListAppend(RLEList list, char value)
     else
     {
         RLEList newNode = (RLEList)malloc(sizeof(struct RLEList_t)); // allocating new node to add to list
+        // could've used RLEListCreate, rly didnt want to
         if (!newNode)
         {
             return RLE_LIST_OUT_OF_MEMORY;
@@ -110,16 +111,18 @@ RLEListResult RLEListRemove(RLEList list, int index)
     for (node = list; node != NULL; node = node->next)
     {
         afterNode = node->next;
-        if (index == 0)
+        if (index == 0) // we've reached the character we want to remove
         {
             if (node->times == 0)
             {
-                if (node == list)
+                if (node == list) // its the first of the list
                 {
                     if (afterNode == NULL)
+                    // node has already been deleted.
                     {
                         return RLE_LIST_SUCCESS;
                     }
+                    // we will move all values from list->next to list, and free list->next
                     list->character = afterNode->character;
                     list->times = afterNode->times;
                     list = afterNode->next;
@@ -128,7 +131,7 @@ RLEListResult RLEListRemove(RLEList list, int index)
                     return RLE_LIST_SUCCESS;
                 }
 
-                free(node);
+                free(node); // the node is somewhere inside the list.
                 prevToNode->next = afterNode;
                 return RLE_LIST_SUCCESS;
             }
@@ -168,12 +171,11 @@ char RLEListGet(RLEList list, int index, RLEListResult *result)
     RLEList node = list; // iterator for the list
     for (int i = 0; i < numberOfCharacters;)
     {
-        i += node->times;
-        if (index < i)
+        i += node->times; // iterating through the characters
+        if (index < i)    // reached the character we want
         {
             if (!result)
             {
-
                 return node->character;
             }
             else
@@ -188,10 +190,12 @@ char RLEListGet(RLEList list, int index, RLEListResult *result)
     {
         return node->character;
     }
-    *result = RLE_LIST_SUCCESS;
+    *result = RLE_LIST_SUCCESS; // we are not supposed to reach this.
     return node->character;
 }
+
 static int getNumberOfDigits(int val)
+// recieves a number, returns its number of digits.
 {
     int count = 0;
     while (val > 0)
@@ -203,6 +207,7 @@ static int getNumberOfDigits(int val)
 }
 
 static int getPowerOfTen(int exponant)
+// recieves an exponant, returns the value 10^exponant
 {
     int power = 1;
     for (int i = 0; i < exponant; i++)
@@ -211,31 +216,35 @@ static int getPowerOfTen(int exponant)
     }
     return power;
 }
+static int getListLength(RLEList list)
+// recieves list, returns the length of it
+{
+    int count = 0;
+    RLEList iterator = list;
+    while (iterator)
+    {
+        count++;
+        iterator = iterator->next;
+    }
+    return count;
+}
 
 char *RLEListExportToString(RLEList list, RLEListResult *result)
 {
 
     if (!list)
     {
-        if (!result)
+        if (result)
         {
-            return NULL;
+            *result = RLE_LIST_NULL_ARGUMENT;
         }
-        *result = RLE_LIST_NULL_ARGUMENT;
         return NULL;
     }
     if (!result)
     {
         return NULL;
     }
-    RLEList temp1 = list;
-    int len = 0;
-    while (temp1)
-    {
-        // finding the length of the list
-        len++;
-        temp1 = temp1->next;
-    }
+    int len = getListLength(list);
     if (len == 0)
     {
         char *str = (char *)malloc(sizeof(char) * 1);
@@ -255,36 +264,36 @@ char *RLEListExportToString(RLEList list, RLEListResult *result)
         *result = RLE_LIST_OUT_OF_MEMORY;
         return 0;
     }
-    temp1 = list;
-    int sum = 2 * len - 1; // for the character and the \n
+    RLEList iterator = list;
+    int sum = 2 * len; // for the character and the \n
     for (int i = 0; i < len; i++)
     {
-        numberOfDigits[i] = getNumberOfDigits(temp1->times); // initializing the array
-        sum += numberOfDigits[i];                            // the sum of the total amout of charactors. will be the length of the string
-        temp1 = temp1->next;
+        numberOfDigits[i] = getNumberOfDigits(iterator->times); // initializing the array
+        sum += numberOfDigits[i];                               // the sum of the total amout of charactors. will be the length of the string
+        iterator = iterator->next;
     }
-    char *str = (char *)malloc(sizeof(char) * sum + 2); // leaving room for \0
+    char *str = (char *)malloc(sizeof(char) * sum + 1); // leaving room for \0
     if (!str)
     {
         *result = RLE_LIST_OUT_OF_MEMORY;
         free(numberOfDigits);
         return 0;
     }
-    temp1 = list;
+    iterator = list;
     int k = 0; // the iterator for the array
     for (int i = 0; i < len; i++)
     {
-        str[k] = temp1->character; // the character
+        str[k] = iterator->character; // the character
         k++;
-        int val = temp1->times;
+        int val = iterator->times;
         for (int j = numberOfDigits[i]; j > 0; j--) // adding the number of appearances in the string
         {
             int digit = (int)(val / (getPowerOfTen(j - 1))); // most significant digit
             val = val % getPowerOfTen(j - 1);                // updating the number
-            str[k] = digit + '0';                            // putting the digit in the string
+            str[k] = digit + '0';                            // putting the digit as a char in the string
             k++;
         }
-        temp1 = temp1->next;
+        iterator = iterator->next;
         str[k] = '\n';
         k++;
     }

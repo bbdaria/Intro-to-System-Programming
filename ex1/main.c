@@ -2,6 +2,10 @@
 #include "RLEList.h"
 #include "AsciiArtTool.h"
 
+#define FLAG 1
+#define SOURCE 2
+#define TARGET 3
+
 char invertingFunction(char character)
 {
     if (character == '@')
@@ -29,7 +33,8 @@ void runCommand(char flag, FILE *source, FILE *target)
         }
         break;
     default:
-        asciiArtPrintEncoded(list, target); // what do i do if fails
+        // we already checked for default. only 'i', 'e' possible.
+        asciiArtPrintEncoded(list, target);
     }
     RLEListDestroy(list);
 }
@@ -40,9 +45,9 @@ int main(int argc, char *argv[])
     {
         return 0;
     }
-    char *flag = argv[1];
-    char *source = argv[2]; // better do define
-    char *target = argv[3];
+    char *flag = argv[FLAG];
+    char *source = argv[SOURCE];
+    char *target = argv[TARGET];
 
     if (flag[0] != '-' || flag[2] != '\0')
     {
