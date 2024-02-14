@@ -56,7 +56,7 @@ typedef char (*MapFunction)(char);
  * 	NULL if allocations failed.
  * 	A new RLEList in case of success.
  */
-RLEList RLEListCreate(void);
+RLEList RLEListCreate();
 
 /**
  * RLEListDestroy: Deallocates an existing RLE list.

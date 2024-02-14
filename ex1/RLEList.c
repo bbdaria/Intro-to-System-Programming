@@ -13,7 +13,7 @@ static int getNumberOfDigits(int val);  // returns number of digits in val
 static int getListLength(RLEList list); // return the length of a list
 static RLEList mergeList(RLEList list); // merges duplicate nodes
 
-RLEList RLEListCreate(void)
+RLEList RLEListCreate()
 {
     RLEList head = (RLEList)malloc(sizeof(struct RLEList_t));
     if (!head)
