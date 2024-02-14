@@ -11,8 +11,9 @@ struct RLEList_t
 static int getPowerOfTen(int exponant); // returns pow(10, exponant)
 static int getNumberOfDigits(int val);  // returns number of digits in val
 static int getListLength(RLEList list); // return the length of a list
+static RLEList mergeList(RLEList list); // merges duplicate nodes
 
-RLEList RLEListCreate()
+RLEList RLEListCreate(void)
 {
     RLEList head = (RLEList)malloc(sizeof(struct RLEList_t));
     if (!head)
@@ -31,8 +32,13 @@ void RLEListDestroy(RLEList list)
     {
         return;
     }
-    RLEListDestroy(list->next);
-    free(list);
+    RLEList temp = list;
+    while (list)
+    {
+        temp = list;
+        list = list->next;
+        free(temp);
+    }
 }
 
 RLEListResult RLEListAppend(RLEList list, char value)
@@ -111,7 +117,7 @@ RLEListResult RLEListRemove(RLEList list, int index)
     for (node = list; node != NULL; node = node->next)
     {
         afterNode = node->next;
-        if (index == 0) // we've reached the character we want to remove
+        if (index < node->times) // we've reached the character we want to remove
         {
             if (node->times == 0)
             {
@@ -127,12 +133,12 @@ RLEListResult RLEListRemove(RLEList list, int index)
                     list->times = afterNode->times;
                     list = afterNode->next;
                     free(afterNode);
-
                     return RLE_LIST_SUCCESS;
                 }
 
                 free(node); // the node is somewhere inside the list.
                 prevToNode->next = afterNode;
+                list = mergeList(list);
                 return RLE_LIST_SUCCESS;
             }
             node->times -= 1;
@@ -240,10 +246,7 @@ char *RLEListExportToString(RLEList list, RLEListResult *result)
         }
         return NULL;
     }
-    if (!result)
-    {
-        return NULL;
-    }
+
     int len = getListLength(list);
     if (len == 0)
     {
@@ -254,7 +257,7 @@ char *RLEListExportToString(RLEList list, RLEListResult *result)
             return NULL;
         }
         *result = RLE_LIST_SUCCESS;
-        str[1] = '\0';
+        str[0] = '\0';
         return str;
     }
     int *numberOfDigits = (int *)malloc(sizeof(int) * len); // an array of the number of digits that the i-th node has
@@ -298,9 +301,40 @@ char *RLEListExportToString(RLEList list, RLEListResult *result)
         k++;
     }
     str[k] = '\0';
-    *result = RLE_LIST_SUCCESS;
+    if (result)
+    {
+        *result = RLE_LIST_SUCCESS;
+    }
     free(numberOfDigits);
     return str;
+}
+static RLEList mergeList(RLEList list)
+{
+    // merges duplicated nodes. a5->a3->null goes to
+    // a8->null
+    RLEList iterator = list;
+    RLEList iteratorNext;
+    while (iterator)
+    {
+        if (!iterator->next)
+        {
+            break;
+        }
+        iteratorNext = iterator->next;
+        while (iterator->character == iteratorNext->character)
+        {
+            iterator->times += iteratorNext->times;
+            iterator->next = iteratorNext->next;
+            free(iteratorNext);
+            iteratorNext = iterator->next;
+            if (!iteratorNext)
+            {
+                break;
+            }
+        }
+        iterator = iterator->next;
+    }
+    return list;
 }
 
 RLEListResult RLEListMap(RLEList list, MapFunction map_function)
@@ -317,29 +351,6 @@ RLEListResult RLEListMap(RLEList list, MapFunction map_function)
     }
 
     // now we will check if we can minimize the list
-
-    iterator = list;
-    RLEList nextToIterator = iterator->next;
-    while (nextToIterator)
-    {
-        if (iterator->character == nextToIterator->character)
-        {
-            // we will join them
-            int count = 0;
-            RLEList temp = nextToIterator;
-            RLEList beforeTemp = iterator;
-            char val = iterator->character;
-            while (temp && temp->character == val)
-            {
-                count += temp->times;
-                beforeTemp->next = temp->next;
-                free(temp);
-                temp = beforeTemp->next;
-            }
-            iterator->times += count;
-        }
-        iterator = nextToIterator;
-        nextToIterator = nextToIterator->next;
-    }
+    list = mergeList(list);
     return RLE_LIST_SUCCESS;
 }
